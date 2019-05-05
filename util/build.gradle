@@ -1,0 +1,6 @@
+ext{
+    moduleName='util'
+    testDependencies='junit'
+}
+
+apply plugin: 'java'

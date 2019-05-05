@@ -1,0 +1,56 @@
+allprojects {
+    ext{
+        junit_jupiter='5.2.0'
+        mockito_core='2.19.0'
+    }
+    repositories {
+        mavenCentral()
+    }
+}
+
+subprojects {
+
+    afterEvaluate {
+
+        compileJava{
+            inputs.property('moduleName', moduleName)
+            doFirst {
+                options.compilerArgs = [
+                        '--module-path', classpath.asPath,
+                ]
+                classpath = files()
+            }
+        }
+        
+        compileTestJava{
+            inputs.property('moduleName',moduleName)
+            inputs.property('testDependencies', testDependencies)
+            doFirst{
+                options.compilerArgs = [
+                        '--module-path', classpath.asPath,
+                        '--add-modules', testDependencies,
+                        '--add-reads',"$moduleName=$testDependencies",
+                        '--patch-module',"$moduleName=" + files(sourceSets.test.java.srcDirs).asPath,
+
+                ]
+                classPath = files()
+            }
+
+        }
+
+        test{
+            inputs.property('moduleName',moduleName)
+            inputs.property('testDependencies', testDependencies)
+
+            doFirst{
+                jvmArgs = [
+                        '--module-path', classpath.asPath,
+                        '--add-modules', 'ALL-MODULE-PATH',
+                        '--add-reads','$moduleName=$testDependencies',
+                        '--patch-module', "$moduleName=" + files(sourceSets.test.java.outputDir).asPath,
+                ]
+                classpath = files()
+            }
+        }
+    }
+}

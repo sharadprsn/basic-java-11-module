@@ -1,0 +1,10 @@
+ext{
+    moduleName='route'
+    testDependencies='junit'
+}
+
+apply plugin: 'java'
+
+dependencies{
+    implementation project(':util')
+}
