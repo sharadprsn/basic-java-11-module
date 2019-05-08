@@ -1,18 +1,40 @@
 allprojects {
-    ext{
-        junit_jupiter='5.2.0'
-        mockito_core='2.19.0'
+    ext {
+        junit_jupiter = '5.3.1'
+        mockito_core = '2.19.0'
     }
+}
+
+buildscript {
     repositories {
         mavenCentral()
+        maven {
+            url 'https://plugins.gradle.org/m2/'
+        }
+    }
+
+    dependencies{
+        classpath 'gradle.plugin.com.google.cloud.tools:jib-gradle-plugin:1.1.2'
     }
 }
 
 subprojects {
 
+    apply plugin: 'java'
+    apply plugin: 'idea'
+    apply plugin: 'com.google.cloud.tools.jib'
+
+
+    sourceCompatibility = 11
+    targetCompatibility = 11
+
+    repositories {
+        mavenCentral()
+    }
+
     afterEvaluate {
 
-        compileJava{
+        compileJava {
             inputs.property('moduleName', moduleName)
             doFirst {
                 options.compilerArgs = [
@@ -21,36 +43,66 @@ subprojects {
                 classpath = files()
             }
         }
-        
-        compileTestJava{
-            inputs.property('moduleName',moduleName)
+
+        compileTestJava {
+            inputs.property('moduleName', moduleName)
             inputs.property('testDependencies', testDependencies)
-            doFirst{
+            doFirst {
                 options.compilerArgs = [
                         '--module-path', classpath.asPath,
                         '--add-modules', testDependencies,
-                        '--add-reads',"$moduleName=$testDependencies",
-                        '--patch-module',"$moduleName=" + files(sourceSets.test.java.srcDirs).asPath,
+                        '--add-reads', "$moduleName=$testDependencies",
+                        '--patch-module', "$moduleName=" + files(sourceSets.test.java.srcDirs).asPath,
 
                 ]
-                classPath = files()
+                classpath = files()
             }
 
         }
 
-        test{
-            inputs.property('moduleName',moduleName)
+        test {
+            inputs.property('moduleName', moduleName)
             inputs.property('testDependencies', testDependencies)
+            useJUnitPlatform()
 
-            doFirst{
+            doFirst {
                 jvmArgs = [
                         '--module-path', classpath.asPath,
                         '--add-modules', 'ALL-MODULE-PATH',
-                        '--add-reads','$moduleName=$testDependencies',
+                        '--add-reads', "$moduleName=$testDependencies",
+                        '--add-opens', "$moduleName/$moduleName=org.junit.platform.commons",
                         '--patch-module', "$moduleName=" + files(sourceSets.test.java.outputDir).asPath,
                 ]
                 classpath = files()
             }
         }
     }
+
+    jib {
+        from {
+            image = 'sharadprsn/ubuntu-jre8'
+            auth {
+                username = project.property('docker.username')
+                password = project.property('docker.password')
+            }
+        }
+        to {
+            image = 'sharadprsn/sample-java-11:v1'
+            auth {
+                username = project.property('docker.username')
+                password = project.property('docker.password')
+            }
+        }
+    }
+}
+
+
+
+project(':route'){
+    dependencies{
+        compile project(':util')
+    }
+}
+
+project(':util'){
 }

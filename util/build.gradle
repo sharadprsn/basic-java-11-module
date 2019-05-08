@@ -1,6 +1,12 @@
 ext{
-    moduleName='util'
-    testDependencies='junit'
+    moduleName='com.app.util'
+    testDependencies='org.junit.jupiter.api,org.mockito'
 }
 
 apply plugin: 'java'
+
+dependencies {
+    testCompile 'org.junit.jupiter:junit-jupiter-api:5.4.1'
+    testCompile 'org.mockito:mockito-core:2.19.0'
+    testRuntime 'org.junit.jupiter:junit-jupiter-engine:5.4.1'
+}
